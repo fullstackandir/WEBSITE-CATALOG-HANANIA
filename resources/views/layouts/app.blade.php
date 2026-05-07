@@ -125,25 +125,29 @@
                 <div>
                     <div style="font-size:1.1rem; line-height:1.1;">Hanania Hijab</div>
                     <div style="font-size:0.65rem; font-weight:400; opacity:0.85; letter-spacing:1px;">
-                        GALERY HIJAB STORE
+                        YOUR HIJAB SOLUTIONS
                     </div>
                 </div>
             </a>
 
+            {{-- Auth button dipindah ke dalam Navbar agar rapi di kanan --}}
+            <div class="d-flex align-items-center ms-auto">
+                @auth
+                    {{-- Tombol Logout HANYA muncul di halaman yang URL-nya berawalan /admin --}}
+                    @if(request()->is('admin*'))
+                        <form method="POST" action="{{ route('logout') }}" class="d-inline m-0">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-light">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </button>
+                        </form>
+                    @endif
+                @endauth
+            </div>
             
         </div>
     </nav>
-    {{-- Auth button --}}
-<div class="ms-auto">
-    @auth
-    <form method="POST" action="{{ route('logout') }}" class="d-inline">
-        @csrf
-        <button type="submit" class="btn btn-sm btn-outline-light">
-            <i class="bi bi-box-arrow-right"></i> Logout
-        </button>
-    </form>
-    @endauth
-</div>
+
     <main class="container py-4">
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show">
@@ -168,7 +172,7 @@
     </main>
 
     <footer class="text-center text-muted py-4 mt-4">
-        <small>© {{ date('Y') }} <strong style="color:var(--maroon)">Hanania Hijab</strong> — Galery Hijab Store</small>
+        <small>© {{ date('Y') }} <strong style="color:var(--maroon)">Hanania Hijab</strong> — YOUR HIJAB SOLUTIONS</small>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

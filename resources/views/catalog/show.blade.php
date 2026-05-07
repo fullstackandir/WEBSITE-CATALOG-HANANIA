@@ -1,234 +1,131 @@
 @extends('layouts.app')
-@section('title', $product->name)
 
 @section('content')
-<nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('catalog.index') }}">Katalog</a></li>
-        <li class="breadcrumb-item active">{{ $product->name }}</li>
-    </ol>
-</nav>
-
-{{-- ═══════════════════════════════════════════════════════════════
-     BARIS ATAS: Foto kiri + Info kanan
-════════════════════════════════════════════════════════════════ --}}
-<div class="row g-4 mb-4">
-
-    {{-- Kolom Gambar --}}
-    <div class="col-md-5">
-
-        {{--
-            ✅ FIX UTAMA:
-            #main-image selalu dirender.
-            Prioritas foto awal:
-            1. Foto produk utama (is_primary=true)
-            2. Foto produk pertama
-            3. Foto warna pertama (jika tidak ada product_images sama sekali)
-            4. Placeholder kosong
-        --}}
+<div class="row">
+    <!-- Kolom Gambar Utama -->
+    <div class="col-md-5 mb-4">
         @php
-            $mainImageUrl = null;
-
-            if ($product->images->isNotEmpty()) {
-                $primary = $product->images->firstWhere('is_primary', true)
-                           ?? $product->images->first();
-                $mainImageUrl = $primary->url;
-            } elseif ($product->colors->whereNotNull('image_path')->isNotEmpty()) {
-                $firstColorWithImage = $product->colors->whereNotNull('image_path')->first();
-                $mainImageUrl = asset('storage/' . $firstColorWithImage->image_path);
-            }
+            // Logika Fallback Gambar: Primary -> First Product Image -> First Color Image -> Placeholder
+            $primaryImage = $product->images->where('is_primary', true)->first() 
+                            ?? $product->images->first() 
+                            ?? $product->colors->whereNotNull('image_path')->first();
+            
+            $mainImageUrl = $primaryImage && isset($primaryImage->image_path)
+                            ? asset('storage/' . $primaryImage->image_path)
+                            : ($primaryImage && isset($primaryImage->url) ? $primaryImage->url : asset('images/logo.png')); // Fallback placeholder
         @endphp
-
-        @if($mainImageUrl)
-            <img id="main-image"
-                 src="{{ $mainImageUrl }}"
-                 class="img-fluid rounded shadow-sm w-100 mb-2"
-                 style="object-fit:contain; background:#f5f5f5; max-height:420px; transition: opacity .2s;">
-        @else
-            {{-- Tidak ada foto sama sekali, tetap render elemen agar switchImage tidak error --}}
-            <div id="main-image-placeholder"
-                 class="bg-secondary rounded d-flex align-items-center justify-content-center mb-2"
-                 style="height:300px;">
-                <i class="bi bi-image text-white" style="font-size:3rem;"></i>
-            </div>
-            {{-- Hidden img tetap ada agar JS tidak error --}}
-            <img id="main-image" src="" class="d-none w-100 rounded shadow-sm mb-2"
-                 style="object-fit:contain; background:#f5f5f5; max-height:420px;">
-        @endif
-
-        {{-- Thumbnail foto produk (jika ada) --}}
-        @if($product->images->isNotEmpty())
-        <div class="d-flex flex-wrap gap-2">
-            @foreach($product->images as $image)
-                <img src="{{ $image->url }}"
-                     class="rounded border thumb-img"
-                     style="width:72px; height:72px; object-fit:cover; cursor:pointer;
-                            {{ ($image->is_primary || (!$product->images->contains('is_primary', true) && $loop->first)) ? 'border-color:#7B1C1C !important; border-width:2px !important;' : '' }}"
-                     onclick="switchImage('{{ $image->url }}', this)"
-                     title="{{ $product->name }}">
-            @endforeach
+        
+        <div class="card border-0 shadow-sm overflow-hidden">
+            <img id="main-image" src="{{ $mainImageUrl }}" class="w-100" style="height: 500px; object-fit: cover;" alt="{{ $product->name }}">
         </div>
-        @endif
-
     </div>
 
-    {{-- Kolom Info --}}
+    <!-- Kolom Detail Produk -->
     <div class="col-md-7">
-        <h2 class="fw-bold mb-3">{{ $product->name }}</h2>
+        <h1 class="h2 fw-bold mb-3">{{ $product->name }}</h1>
+        <p class="text-secondary mb-4" style="line-height: 1.6; white-space: pre-wrap;">{{ $product->description }}</p>
 
-        {{-- 1. Daftar Harga --}}
-        @if($product->price)
-        <div class="card mb-3">
-            <div class="card-header fw-semibold text-white card-header-maroon">
-                💰 Daftar Harga
+        <!-- Tabel Harga (Ecer & Grosir saja) -->
+        <div class="card mb-4 shadow-sm border-0">
+            <div class="card-header card-header-maroon fw-semibold py-3">
+                <i class="bi bi-tags me-2"></i> Daftar Harga
             </div>
-            <table class="table table-sm mb-0">
-                <tbody>
-                    <tr>
-                        <td width="40%">Harga Normal</td>
-                        <td class="text-danger fw-bold">
-                            Rp {{ number_format($product->price->retail_price, 0, ',', '.') }}
-                        </td>
-                        <td class="text-muted small">per pcs</td>
-                    </tr>
-                    <tr>
-                        <td>Harga Grosir</td>
-                        <td class="fw-bold">
-                            Rp {{ number_format($product->price->reseller_price, 0, ',', '.') }}
-                        </td>
-                        <td class="text-muted small">
-                            min. {{ $product->price->reseller_min_qty }} pcs
-                        </td>
-                    </tr>
-                    <tr>
-                        
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        @endif
-
-        {{-- 2. Warna & Stok --}}
-        <div class="card mb-3">
-            <div class="card-header fw-semibold text-white card-header-maroon">
-                🎨 Warna & Stok
-            </div>
-            <div class="card-body">
-                <div class="row g-2">
-                    @foreach($product->colors as $color)
-                    <div class="col-6 col-md-4">
-                        @if($color->image_path)
-                            {{--
-                                ✅ FIX: onclick sekarang selalu panggil switchImage.
-                                Jika product tidak punya images, placeholder disembunyikan
-                                dan #main-image ditampilkan dengan foto warna.
-                            --}}
-                            <div class="border rounded overflow-hidden color-card"
-                                 style="cursor:pointer; transition: box-shadow .2s;"
-                                 onmouseover="this.style.boxShadow='0 0 0 2px #7B1C1C'"
-                                 onmouseout="this.style.boxShadow=''"
-                                 onclick="switchImage('{{ asset('storage/' . $color->image_path) }}', null)"
-                                 title="Klik untuk lihat foto warna {{ $color->name }}">
-                                <img src="{{ asset('storage/' . $color->image_path) }}"
-                                     class="w-100"
-                                     style="height:80px; object-fit:cover;">
-                                <div class="px-2 py-1 text-center" style="background:#fafafa;">
-                                    <div class="fw-semibold small">{{ $color->name }}</div>
-                                    <span class="badge {{ $color->status_class }}" style="font-size:.7rem;">
-                                        {{ $color->status }}
-                                        @if($color->stock > 0)({{ $color->stock }})@endif
-                                    </span>
-                                </div>
-                            </div>
-                        @else
-                            <div class="d-flex align-items-center gap-2 p-2 border rounded">
-                                <span class="color-dot flex-shrink-0"
-                                      style="background-color: {{ $color->hex_code ?? '#cccccc' }}">
-                                </span>
-                                <div>
-                                    <div class="fw-semibold small">{{ $color->name }}</div>
-                                    <span class="badge {{ $color->status_class }}" style="font-size:.7rem;">
-                                        {{ $color->status }}
-                                        @if($color->stock > 0)({{ $color->stock }})@endif
-                                    </span>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                    @endforeach
-                </div>
-
-                @if($product->colors->whereNotNull('image_path')->count() > 0)
-                    <p class="text-muted small mt-2 mb-0">
-                        <i class="bi bi-hand-index"></i> Klik foto warna untuk lihat tampilan model.
-                    </p>
-                @endif
+            <div class="card-body p-0">
+                <table class="table table-hover table-borderless mb-0">
+                    <tbody>
+                        <tr class="border-bottom">
+                            <td class="ps-4 py-3 align-middle text-muted">Harga Ecer</td>
+                            <td class="text-danger fw-bold fs-5 align-middle">
+                                Rp {{ number_format($product->price->retail_price ?? 0, 0, ',', '.') }}
+                            </td>
+                            <td class="text-muted small align-middle pe-4">per pcs</td>
+                        </tr>
+                        <tr>
+                            <td class="ps-4 py-3 align-middle text-muted">Harga Grosir</td>
+                            <td class="fw-bold fs-5 align-middle">
+                                Rp {{ number_format($product->price->reseller_price ?? 0, 0, ',', '.') }}
+                            </td>
+                            <td class="text-muted small align-middle pe-4">
+                                min. {{ $product->price->reseller_min_qty ?? 3 }} pcs
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        {{-- 3. Tombol WhatsApp --}}
-        <a href="https://wa.me/{{ $waNumber }}?text={{ $waMessage }}"
-           class="btn btn-success btn-lg w-100 mb-2" target="_blank">
-            <i class="bi bi-whatsapp me-2"></i>Tanya via WhatsApp
-        </a>
-        <p class="text-center text-muted small">
-            <i class="bi bi-info-circle"></i>
-            Pesan otomatis sudah disiapkan, tinggal kirim!
-        </p>
+        <!-- Pilihan Warna (Tanpa Badge Stok) -->
+        <div class="mb-4">
+            <h5 class="fw-bold mb-3">Pilihan Warna</h5>
+            <div class="d-flex flex-wrap gap-3">
+                @forelse($product->colors as $color)
+                    @if($color->image_path)
+                        {{-- Warna dengan foto --}}
+                        <div class="border rounded overflow-hidden color-card shadow-sm transition" style="cursor:pointer; width: 85px;"
+                             onclick="switchImage('{{ asset('storage/' . $color->image_path) }}', this)">
+                            <img src="{{ asset('storage/' . $color->image_path) }}"
+                                 class="w-100 border-bottom" style="height:80px; object-fit:cover;" alt="{{ $color->name }}">
+                            <div class="px-2 py-2 text-center bg-light">
+                                <div class="fw-semibold text-truncate" style="font-size: 0.75rem;" title="{{ $color->name }}">
+                                    {{ $color->name }}
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        {{-- Warna tanpa foto --}}
+                        <div class="d-flex align-items-center justify-content-center px-3 py-2 border rounded bg-light shadow-sm">
+                            <span class="fw-semibold" style="font-size: 0.85rem;">{{ $color->name }}</span>
+                        </div>
+                    @endif
+                @empty
+                    <div class="text-muted small">Belum ada varian warna.</div>
+                @endforelse
+            </div>
+        </div>
+
+        <!-- Tombol Pesan via WhatsApp -->
+        <div class="mt-5">
+            @php
+                // Format pesan WhatsApp agar rapih saat masuk ke WA Admin
+                $waText = "Halo Admin Hanania Hijab, saya tertarik untuk order produk *{$product->name}*. Boleh info lebih lanjut?";
+            @endphp
+            <a href="https://wa.me/6281234567890?text={{ urlencode($waText) }}" 
+               target="_blank" 
+               class="btn btn-success btn-lg w-100 py-3 shadow-sm fw-bold">
+                <i class="bi bi-whatsapp me-2"></i> Pesan via WhatsApp
+            </a>
+        </div>
     </div>
 </div>
-
-{{-- ═══════════════════════════════════════════════════════════════
-     BARIS BAWAH: Deskripsi Produk
-════════════════════════════════════════════════════════════════ --}}
-@if($product->description)
-<div class="card">
-    <div class="card-header" style="background:#f8f8f8; border-bottom: 1px solid #eee;">
-        <span class="fw-bold" style="font-size:1rem;">Deskripsi Produk</span>
-    </div>
-    <div class="card-body" style="line-height:1.9; font-size:.95rem; white-space:pre-line; color:#333;">
-        {{ $product->description }}
-    </div>
-</div>
-@endif
-
 @endsection
 
 @push('scripts')
 <script>
-/**
- * switchImage — ganti foto utama saat thumbnail atau warna diklik.
- *
- * FIX: Sekarang juga menangani kasus di mana produk tidak punya
- * product_images (hanya foto warna). Dalam kasus itu, #main-image
- * awalnya tersembunyi (d-none) dan placeholder ditampilkan.
- * Setelah warna diklik pertama kali, placeholder disembunyikan
- * dan #main-image ditampilkan.
- */
-function switchImage(url, el) {
-    const mainImg = document.getElementById('main-image');
-    const placeholder = document.getElementById('main-image-placeholder');
+    // Script ganti gambar saat warna diklik
+    function switchImage(url, element) {
+        // Ganti gambar utama
+        document.getElementById('main-image').src = url;
 
-    // Sembunyikan placeholder jika ada, tampilkan #main-image
-    if (placeholder) {
-        placeholder.classList.add('d-none');
-    }
-    if (mainImg) {
-        mainImg.classList.remove('d-none');
-        mainImg.src = url;
-    }
+        // Reset highlight border pada semua pilihan warna
+        document.querySelectorAll('.color-card').forEach(card => {
+            card.classList.remove('border-maroon', 'border-2');
+        });
 
-    // Reset semua border thumbnail produk
-    document.querySelectorAll('.thumb-img').forEach(t => {
-        t.style.borderColor = '';
-        t.style.borderWidth = '1px';
-    });
-
-    // Highlight thumbnail yang diklik (hanya thumbnail produk, bukan kartu warna)
-    if (el && el.classList.contains('thumb-img')) {
-        el.style.borderColor = '#7B1C1C';
-        el.style.borderWidth = '2px';
+        // Tambahkan border maroon ke warna yang sedang aktif
+        if (element) {
+            element.classList.add('border-maroon', 'border-2');
+        }
     }
-}
 </script>
+
+<style>
+    /* Tambahan agar efek hover transisi lebih halus */
+    .color-card.transition {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .color-card.transition:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 .25rem .5rem rgba(0,0,0,.15)!important;
+    }
+</style>
 @endpush
