@@ -125,7 +125,7 @@
                 <div>
                     <div style="font-size:1.1rem; line-height:1.1;">Hanania Hijab</div>
                     <div style="font-size:0.65rem; font-weight:400; opacity:0.85; letter-spacing:1px;">
-                        YOUR HIJAB SOLUTIONS
+                        YOUR HIJAB SOLUTION
                     </div>
                 </div>
             </a>
@@ -172,7 +172,7 @@
     </main>
 
     <footer class="text-center text-muted py-4 mt-4">
-        <small>© {{ date('Y') }} <strong style="color:var(--maroon)">Hanania Hijab</strong> — YOUR HIJAB SOLUTIONS</small>
+        <small>© {{ date('Y') }} <strong style="color:var(--maroon)">Hanania Hijab</strong> — YOUR HIJAB SOLUTION — All rights reserved</small>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

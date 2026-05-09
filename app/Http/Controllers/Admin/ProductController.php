@@ -11,9 +11,6 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $products = Product::with(['primaryImage', 'price', 'colors'])
@@ -23,17 +20,11 @@ class ProductController extends Controller
         return view('admin.products.index', compact('products'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('admin.products.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         // ── 1. Validasi ──────────────────────────────────────────────────────
@@ -46,7 +37,7 @@ class ProductController extends Controller
             'reseller_min_qty'  => 'required|integer|min:1',
             'colors'            => 'required|array|min:1',
             'colors.*.name'     => 'required|string|max:100',
-            'colors.*.stock'    => 'required|integer|min:0',
+            // VALIDASI STOK DIHAPUS
             'color_images.*'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'product_images'    => 'nullable|array',
             'product_images.*'  => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -65,25 +56,21 @@ class ProductController extends Controller
             'retail_price'      => $request->retail_price,
             'reseller_price'    => $request->reseller_price,
             'reseller_min_qty'  => $request->reseller_min_qty,
-            
         ]);
         
         // ── 4. Simpan warna + foto sample per warna ──────────────────────────
         foreach ($request->colors as $index => $colorData) {
-    $color = $product->colors()->create([
-        'name'  => $colorData['name'],
-        'stock' => $colorData['stock'],
-    ]);
+            $color = $product->colors()->create([
+                'name'  => $colorData['name'],
+                'stock' => 0, // Set default 0 karena form stok sudah dihapus
+            ]);
 
-    if ($request->hasFile("color_images.$index")) {
-        $path = $request->file("color_images.$index")
-            ->store('colors', 'public');
-        $color->update(['image_path' => $path]);
-        \Log::info("Color image saved: index=$index, path=$path");
-    } else {
-        \Log::warning("No file for color index: $index");
-    }
-}
+            if ($request->hasFile("color_images.$index")) {
+                $path = $request->file("color_images.$index")
+                    ->store('colors', 'public');
+                $color->update(['image_path' => $path]);
+            }
+        }
 
         // ── 5. Simpan foto produk utama ──────────────────────────────────────
         if ($request->hasFile('product_images')) {
@@ -102,29 +89,17 @@ class ProductController extends Controller
             ->with('success', 'Produk "' . $product->name . '" berhasil ditambahkan!');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Product $product)
     {
         return redirect()->route('admin.products.edit', $product);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Product $product)
     {
         $product->load(['price', 'colors', 'images']);
         return view('admin.products.edit', compact('product'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * FIX: Gunakan upsert (update/create/delete) untuk warna,
-     * bukan hapus-semua-lalu-recreate, agar mapping color_images[] tetap akurat.
-     */
     public function update(Request $request, Product $product)
     {
         // ── 1. Validasi ──────────────────────────────────────────────────────
@@ -137,7 +112,7 @@ class ProductController extends Controller
             'reseller_min_qty'  => 'required|integer|min:1',
             'colors'            => 'required|array|min:1',
             'colors.*.name'     => 'required|string|max:100',
-            'colors.*.stock'    => 'required|integer|min:0',
+            // VALIDASI STOK DIHAPUS
             'color_images.*'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'product_images'    => 'nullable|array',
             'product_images.*'  => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -158,17 +133,10 @@ class ProductController extends Controller
                 'retail_price'      => $request->retail_price,
                 'reseller_price'    => $request->reseller_price,
                 'reseller_min_qty'  => $request->reseller_min_qty,
-                
             ]
         );
 
-        // ── 4. Update warna — UPSERT (bukan hapus+recreate) ──────────────────
-        //
-        // Strategi:
-        // a) Warna dengan ID (dari DB) → update nama, stok, dan foto jika ada upload baru
-        // b) Warna tanpa ID (baru dari form) → create
-        // c) Warna yang dihapus user (dikirim via deleted_colors[]) → hapus dari DB
-        //
+        // ── 4. Update warna — UPSERT ──────────────────
         $submittedColorIds = [];
 
         foreach ($request->colors as $index => $colorData) {
@@ -180,35 +148,30 @@ class ProductController extends Controller
                 if ($color) {
                     $color->update([
                         'name'  => $colorData['name'],
-                        'stock' => $colorData['stock'],
+                        'stock' => 0, // Default 0
                     ]);
 
                     // Upload foto baru jika ada
                     if ($request->hasFile("color_images.$index")) {
-                        // Hapus foto lama dari storage
                         if ($color->image_path) {
                             Storage::disk('public')->delete($color->image_path);
                         }
-                        $path = $request->file("color_images.$index")
-                            ->store('colors', 'public');
+                        $path = $request->file("color_images.$index")->store('colors', 'public');
                         $color->update(['image_path' => $path]);
                     }
-
                     $submittedColorIds[] = (int) $colorId;
                 }
             } else {
                 // -- Warna baru: create --
                 $color = $product->colors()->create([
                     'name'  => $colorData['name'],
-                    'stock' => $colorData['stock'],
+                    'stock' => 0, // Default 0
                 ]);
 
                 if ($request->hasFile("color_images.$index")) {
-                    $path = $request->file("color_images.$index")
-                        ->store('colors', 'public');
+                    $path = $request->file("color_images.$index")->store('colors', 'public');
                     $color->update(['image_path' => $path]);
                 }
-
                 $submittedColorIds[] = $color->id;
             }
         }
@@ -225,7 +188,7 @@ class ProductController extends Controller
             }
         }
 
-        // ── 5. Tambahkan foto produk baru (foto lama tidak dihapus di sini) ──
+        // ── 5. Tambahkan foto produk baru ──────────────────────────────────────
         if ($request->hasFile('product_images')) {
             $existingCount = $product->images()->count();
 
@@ -239,8 +202,7 @@ class ProductController extends Controller
             }
 
             if (!$product->images()->where('is_primary', true)->exists()) {
-                $product->images()->orderBy('sort_order')->first()
-                    ?->update(['is_primary' => true]);
+                $product->images()->orderBy('sort_order')->first()?->update(['is_primary' => true]);
             }
         }
 
@@ -249,9 +211,6 @@ class ProductController extends Controller
             ->with('success', 'Produk "' . $product->name . '" berhasil diperbarui!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Product $product)
     {
         foreach ($product->images as $image) {
@@ -269,9 +228,6 @@ class ProductController extends Controller
             ->with('success', 'Produk berhasil dihapus.');
     }
 
-    /**
-     * Remove a single product image from storage and database.
-     */
     public function destroyImage(Product $product, ProductImage $image)
     {
         Storage::disk('public')->delete($image->image_path);
@@ -279,8 +235,7 @@ class ProductController extends Controller
         $image->delete();
 
         if ($wasPrimary) {
-            $product->images()->orderBy('sort_order')->first()
-                ?->update(['is_primary' => true]);
+            $product->images()->orderBy('sort_order')->first()?->update(['is_primary' => true]);
         }
 
         return back()->with('success', 'Foto berhasil dihapus.');

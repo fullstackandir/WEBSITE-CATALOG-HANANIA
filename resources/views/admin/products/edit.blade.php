@@ -65,7 +65,7 @@
                     <div class="row g-3">
                         <div class="col-md-12">
                             <label class="form-label fw-semibold">
-                                Harga Normal <span class="text-danger">*</span>
+                                Harga Ecer <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
@@ -79,7 +79,7 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Harga Grosir</label>
+                            <label class="form-label fw-semibold">Harga Grosir/Reseller</label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
                                 <input type="number" name="reseller_price" class="form-control"
@@ -88,7 +88,7 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Min. Beli Grosir</label>
+                            <label class="form-label fw-semibold">Min. Beli Grosir/Reseller</label>
                             <div class="input-group">
                                 <input type="number" name="reseller_min_qty" class="form-control"
                                        value="{{ old('reseller_min_qty', $product->price->reseller_min_qty ?? 3) }}"
@@ -96,16 +96,14 @@
                                 <span class="input-group-text">pcs</span>
                             </div>
                         </div>
-                        
-                        
                     </div>
                 </div>
             </div>
 
-            {{-- Warna & Stok --}}
+            {{-- Warna --}}
             <div class="card shadow-sm mb-4">
                 <div class="card-header fw-semibold card-header-maroon d-flex justify-content-between align-items-center">
-                    🎨 Warna & Stok
+                    🎨 Pilihan Warna
                     <button type="button" class="btn btn-sm btn-light" id="add-color">
                         <i class="bi bi-plus-lg"></i> Tambah Warna
                     </button>
@@ -126,19 +124,12 @@
                             </button>
 
                             <div class="row g-2">
-                                <div class="col-md-6">
+                                <div class="col-12">
                                     <label class="form-label fw-semibold small">Nama Warna</label>
                                     <input type="text" name="colors[{{ $index }}][name]"
                                            class="form-control"
                                            value="{{ old("colors.$index.name", $color->name) }}"
                                            placeholder="contoh: Hitam" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold small">Stok (pcs)</label>
-                                    <input type="number" name="colors[{{ $index }}][stock]"
-                                           class="form-control"
-                                           value="{{ old("colors.$index.stock", $color->stock) }}"
-                                           min="0" required>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-semibold small">
@@ -147,15 +138,6 @@
                                             <span class="text-muted fw-normal">(upload baru untuk mengganti)</span>
                                         @endif
                                     </label>
-
-                                    {{--
-                                        ✅ FIX UTAMA edit.blade.php:
-                                        Drop zone sekarang menampilkan foto LAMA di dalamnya
-                                        (bukan di luar sebagai <img> terpisah).
-                                        Jika ada image_path → tampilkan foto lama di dalam dropzone.
-                                        Jika tidak → tampilkan icon upload biasa.
-                                        Ketika user upload baru → foto lama diganti oleh previewColorImage().
-                                    --}}
                                     <div class="color-dropzone border rounded text-center p-2"
                                          style="border: 2px dashed #dee2e6 !important; cursor:pointer; min-height:80px; position:relative;"
                                          data-index="{{ $index }}"
@@ -165,7 +147,6 @@
                                          ondrop="handleColorDrop(event, {{ $index }})">
 
                                         @if($color->image_path)
-                                        {{-- Foto lama ditampilkan DALAM dropzone --}}
                                         <div class="dropzone-content-{{ $index }}">
                                             <img src="{{ asset('storage/' . $color->image_path) }}"
                                                  style="max-height:100px; max-width:100%; border-radius:6px; object-fit:contain;">
@@ -190,10 +171,6 @@
                         </div>
                         @endforeach
                     </div>
-                    <small class="text-muted">
-                        <i class="bi bi-info-circle"></i>
-                        Stok 0 = otomatis tampil "Habis" di katalog
-                    </small>
                 </div>
             </div>
 
@@ -264,9 +241,9 @@
                         <p class="text-muted small mb-0 mt-1">Drag & drop atau klik untuk upload</p>
                         <p class="text-muted mb-0" style="font-size:.75rem;">JPG, PNG, WEBP — Maks. 2MB/foto</p>
                     </div>
+                    {{-- DIHAPUS onchange="previewProductImages(this)" KARENA PAKAI JS LISTENER --}}
                     <input type="file" name="product_images[]" class="d-none"
-                           multiple accept="image/*" id="product-image-input"
-                           onchange="previewProductImages(this)">
+                           multiple accept="image/*" id="product-image-input">
                     <div id="product-image-preview" class="d-flex flex-wrap gap-2"></div>
                 </div>
             </div>
@@ -291,9 +268,6 @@
 <script>
 let colorIndex = {{ $product->colors->count() }};
 
-// ══════════════════════════════════════════════════════════════════════════
-// Hapus foto produk via fetch() — tanpa nested form
-// ══════════════════════════════════════════════════════════════════════════
 function deleteImage(imageId, url, btn) {
     if (!confirm('Hapus foto ini?')) return;
 
@@ -327,7 +301,6 @@ function deleteImage(imageId, url, btn) {
     });
 }
 
-// ── Tambah baris warna baru ───────────────────────────────────────────────
 document.getElementById('add-color').addEventListener('click', function () {
     const container = document.getElementById('colors-container');
     const html = `
@@ -339,15 +312,10 @@ document.getElementById('add-color').addEventListener('click', function () {
                 <i class="bi bi-trash"></i>
             </button>
             <div class="row g-2">
-                <div class="col-md-6">
+                <div class="col-12">
                     <label class="form-label fw-semibold small">Nama Warna</label>
                     <input type="text" name="colors[${colorIndex}][name]"
                            class="form-control" placeholder="contoh: Putih" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold small">Stok (pcs)</label>
-                    <input type="number" name="colors[${colorIndex}][stock]"
-                           class="form-control" placeholder="0" min="0" required>
                 </div>
                 <div class="col-12">
                     <label class="form-label fw-semibold small">Foto Sample Warna</label>
@@ -375,7 +343,6 @@ document.getElementById('add-color').addEventListener('click', function () {
     updateRemoveButtons();
 });
 
-// ── Hapus baris warna ────────────────────────────────────────────────────
 document.getElementById('colors-container').addEventListener('click', function (e) {
     if (e.target.closest('.btn-remove-color')) {
         const row = e.target.closest('.color-row');
@@ -402,7 +369,6 @@ function updateRemoveButtons() {
     });
 }
 
-// ── Preview foto sample warna (dipakai saat upload baru, menggantikan foto lama di dropzone) ─
 function previewColorImage(input, index) {
     if (!input.files || !input.files[0]) return;
     const reader = new FileReader();
@@ -420,7 +386,6 @@ function previewColorImage(input, index) {
     reader.readAsDataURL(input.files[0]);
 }
 
-// ── Drag & drop foto warna ────────────────────────────────────────────────
 function handleColorDrop(event, index) {
     event.preventDefault();
     event.currentTarget.style.borderColor = '#dee2e6';
@@ -434,44 +399,74 @@ function handleColorDrop(event, index) {
     previewColorImage(input, index);
 }
 
-// ── Preview foto produk baru ──────────────────────────────────────────────
-function previewProductImages(input) {
+// === LOGIKA FOTO PRODUK (Diperbarui menggunakan Array) ===
+let uploadedProductFiles = [];
+
+document.getElementById('product-image-input').addEventListener('change', function() {
+    addProductFiles(Array.from(this.files));
+});
+
+function addProductFiles(newFiles) {
+    newFiles.forEach(file => {
+        const isDuplicate = uploadedProductFiles.some(f => f.name === file.name && f.size === file.size);
+        if (!isDuplicate && file.type.startsWith('image/')) {
+            uploadedProductFiles.push(file);
+        }
+    });
+    renderProductPreviews();
+    syncProductInput();
+}
+
+function renderProductPreviews() {
     const preview = document.getElementById('product-image-preview');
     preview.innerHTML = '';
-    Array.from(input.files).forEach((file, i) => {
+    
+    uploadedProductFiles.forEach((file, i) => {
         const reader = new FileReader();
         reader.onload = e => {
             const div = document.createElement('div');
-            div.className = 'position-relative';
+            div.className = 'position-relative mt-2';
             div.innerHTML = `
-                <img src="${e.target.result}"
-                     style="width:75px; height:75px; object-fit:cover;"
-                     class="rounded border">
-                ${i === 0 ? '<span class="badge bg-warning text-dark position-absolute top-0 start-0" style="font-size:9px;">Baru</span>' : ''}`;
+                <img src="${e.target.result}" style="width:75px; height:75px; object-fit:cover;" class="rounded border">
+                <button type="button" class="btn btn-danger btn-sm p-0 d-flex align-items-center justify-content-center position-absolute top-0 end-0" 
+                        style="width:20px; height:20px; font-size:10px; transform: translate(30%, -30%);" 
+                        onclick="removeProductFile(${i})">
+                    <i class="bi bi-x"></i>
+                </button>
+            `;
             preview.appendChild(div);
         };
         reader.readAsDataURL(file);
     });
 
     const dz = document.getElementById('product-dropzone');
-    dz.querySelector('p').textContent = `${input.files.length} foto dipilih`;
+    if(uploadedProductFiles.length > 0) {
+        dz.querySelector('p').textContent = `${uploadedProductFiles.length} foto siap ditambahkan`;
+    } else {
+        dz.querySelector('p').textContent = "Drag & drop atau klik untuk upload";
+    }
 }
 
-// ── Drag & drop foto produk ───────────────────────────────────────────────
+function removeProductFile(index) {
+    uploadedProductFiles.splice(index, 1);
+    renderProductPreviews();
+    syncProductInput();
+}
+
+function syncProductInput() {
+    const input = document.getElementById('product-image-input');
+    const dt = new DataTransfer();
+    uploadedProductFiles.forEach(f => dt.items.add(f));
+    input.files = dt.files;
+}
+
 function handleProductDrop(event) {
     event.preventDefault();
     const dz = document.getElementById('product-dropzone');
     dz.style.borderColor = '#dee2e6';
     dz.style.background = '';
-
-    const files = event.dataTransfer.files;
-    const input = document.getElementById('product-image-input');
-    const dt = new DataTransfer();
-    Array.from(files).forEach(f => {
-        if (f.type.startsWith('image/')) dt.items.add(f);
-    });
-    input.files = dt.files;
-    previewProductImages(input);
+    
+    addProductFiles(Array.from(event.dataTransfer.files));
 }
 </script>
 @endpush

@@ -56,7 +56,7 @@
                     <div class="row g-3">
                         <div class="col-md-12">
                             <label class="form-label fw-semibold">
-                                Harga Normal <span class="text-danger">*</span>
+                                Harga Ecer <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
@@ -70,7 +70,7 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Harga Grosir</label>
+                            <label class="form-label fw-semibold">Harga Grosir/Reseller</label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
                                 <input type="number" name="reseller_price"
@@ -80,7 +80,7 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Min. Beli Grosir</label>
+                            <label class="form-label fw-semibold">Min. Beli Grosir/Reseller</label>
                             <div class="input-group">
                                 <input type="number" name="reseller_min_qty"
                                        class="form-control"
@@ -89,16 +89,14 @@
                                 <span class="input-group-text">pcs</span>
                             </div>
                         </div>
-                        
-                        
                     </div>
                 </div>
             </div>
 
-            {{-- Warna & Stok --}}
+            {{-- Warna --}}
             <div class="card shadow-sm mb-4">
                 <div class="card-header fw-semibold card-header-maroon d-flex justify-content-between align-items-center">
-                    🎨 Warna & Stok
+                    🎨 Pilihan Warna
                     <button type="button" class="btn btn-sm btn-light" id="add-color">
                         <i class="bi bi-plus-lg"></i> Tambah Warna
                     </button>
@@ -112,17 +110,11 @@
                                 <i class="bi bi-trash"></i>
                             </button>
                             <div class="row g-2">
-                                <div class="col-md-6">
+                                <div class="col-12">
                                     <label class="form-label fw-semibold small">Nama Warna</label>
                                     <input type="text" name="colors[0][name]"
                                            class="form-control"
                                            placeholder="contoh: Hitam" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold small">Stok (pcs)</label>
-                                    <input type="number" name="colors[0][stock]"
-                                           class="form-control"
-                                           placeholder="0" min="0" required>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-semibold small">Foto Sample Warna</label>
@@ -146,10 +138,6 @@
                             </div>
                         </div>
                     </div>
-                    <small class="text-muted">
-                        <i class="bi bi-info-circle"></i>
-                        Stok 0 = otomatis tampil "Habis" di katalog
-                    </small>
                 </div>
             </div>
 
@@ -189,7 +177,6 @@
                         <p class="text-muted small mb-0">atau klik untuk pilih file</p>
                         <p class="text-muted mt-1 mb-0" style="font-size:.75rem;">JPG, PNG, WEBP — Maks. 2MB/foto</p>
                     </div>
-                    {{-- multiple wajib ada! --}}
                     <input type="file" name="product_images[]" class="d-none"
                            multiple accept="image/*" id="image-input"
                            onchange="addFiles(Array.from(this.files))">
@@ -219,9 +206,7 @@
 
 @push('scripts')
 <script>
-// ════════════════════════════════════════════════════════════════════
-// FOTO PRODUK — multi upload, array uploadedFiles
-// ════════════════════════════════════════════════════════════════════
+// FOTO PRODUK
 let uploadedFiles = [];
 
 function addFiles(newFiles) {
@@ -282,9 +267,7 @@ function handleProductDrop(event) {
     addFiles(Array.from(event.dataTransfer.files));
 }
 
-// ════════════════════════════════════════════════════════════════════
-// WARNA — dynamic rows + foto sample
-// ════════════════════════════════════════════════════════════════════
+// WARNA
 let colorIndex = 1;
 
 document.getElementById('add-color').addEventListener('click', function () {
@@ -297,15 +280,10 @@ document.getElementById('add-color').addEventListener('click', function () {
                 <i class="bi bi-trash"></i>
             </button>
             <div class="row g-2">
-                <div class="col-md-6">
+                <div class="col-12">
                     <label class="form-label fw-semibold small">Nama Warna</label>
                     <input type="text" name="colors[${colorIndex}][name]"
                            class="form-control" placeholder="contoh: Putih" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold small">Stok (pcs)</label>
-                    <input type="number" name="colors[${colorIndex}][stock]"
-                           class="form-control" placeholder="0" min="0" required>
                 </div>
                 <div class="col-12">
                     <label class="form-label fw-semibold small">Foto Sample Warna</label>
