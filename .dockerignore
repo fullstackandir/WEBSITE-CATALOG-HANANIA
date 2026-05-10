@@ -1,0 +1,8 @@
+/vendor/
+/node_modules/
+/public/build/
+/storage/app/public/
+/storage/framework/
+/storage/logs/
+/.git/
+/.env
