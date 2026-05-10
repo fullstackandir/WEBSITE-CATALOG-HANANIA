@@ -18,7 +18,7 @@ services:
     container_name: hanania-catalog-web
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "8000:80"
     volumes:
       - ./:/var/www
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
