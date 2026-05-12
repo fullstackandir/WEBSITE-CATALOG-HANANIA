@@ -102,8 +102,8 @@
         @endforeach
     </div>
 
-    <div class="mt-5 d-flex justify-content-center">
-        {{ $products->links() }}
+    <div class="mt-5 mb-5 d-flex justify-content-center custom-pagination">
+        {{ $products->links('pagination::bootstrap-5') }}
     </div>
 @endif
 
@@ -144,6 +144,32 @@
     .btn-floating-wa:hover {
         transform: scale(1.15) rotate(-5deg);
         box-shadow: 0 10px 25px rgba(37, 211, 102, 0.4) !important;
+    }
+
+    /* === Custom Pagination === */
+    .custom-pagination .page-link {
+        color: #7B1C1C;
+        border-radius: 8px;
+        margin: 0 3px;
+        border: 1px solid #eee;
+        transition: all 0.3s ease;
+    }
+    .custom-pagination .page-link:hover {
+        background-color: #7B1C1C;
+        color: white;
+        border-color: #7B1C1C;
+        transform: translateY(-2px);
+    }
+    .custom-pagination .page-item.active .page-link {
+        background-color: #7B1C1C;
+        border-color: #7B1C1C;
+        color: white;
+        box-shadow: 0 4px 10px rgba(123, 28, 28, 0.2);
+    }
+    .custom-pagination .page-item.disabled .page-link {
+        color: #adb5bd;
+        background-color: #fff;
+        border-color: #eee;
     }
 
     /* === Hero Section === */
