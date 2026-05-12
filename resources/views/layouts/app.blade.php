@@ -6,7 +6,7 @@
     <title>HANANIA HIJAB</title>
     
     <!-- Favicon / Logo Web -->
-    <link rel="icon" href="{{ asset('images/favicon.png') }}?v={{ time() }}" type="image/png">
+    <link rel="icon" href="{{ asset('images/logo.png') }}" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>

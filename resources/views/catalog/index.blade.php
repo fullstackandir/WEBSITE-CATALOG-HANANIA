@@ -37,7 +37,6 @@
     <a href="{{ route('catalog.index') }}" class="btn {{ empty($currentSearch) ? 'btn-maroon border-0 text-white' : 'btn-white border text-muted' }} rounded-pill px-4 py-2 me-2 shadow-sm fw-semibold" style="font-size: 0.9rem;">Semua</a>
     <a href="{{ route('catalog.index', ['search' => 'Pashmina']) }}" class="btn {{ str_contains($currentSearch, 'pashmina') ? 'btn-maroon border-0 text-white' : 'btn-white border text-muted' }} rounded-pill px-4 py-2 me-2 shadow-sm fw-semibold" style="font-size: 0.9rem;">Pashmina</a>
     <a href="{{ route('catalog.index', ['search' => 'Bergo']) }}" class="btn {{ str_contains($currentSearch, 'bergo') ? 'btn-maroon border-0 text-white' : 'btn-white border text-muted' }} rounded-pill px-4 py-2 me-2 shadow-sm fw-semibold" style="font-size: 0.9rem;">Bergo</a>
-    <a href="{{ route('catalog.index', ['search' => 'Segi Empat']) }}" class="btn {{ str_contains($currentSearch, 'segi empat') ? 'btn-maroon border-0 text-white' : 'btn-white border text-muted' }} rounded-pill px-4 py-2 me-2 shadow-sm fw-semibold" style="font-size: 0.9rem;">Segi Empat</a>
     <a href="{{ route('catalog.index', ['search' => 'Ciput']) }}" class="btn {{ str_contains($currentSearch, 'ciput') ? 'btn-maroon border-0 text-white' : 'btn-white border text-muted' }} rounded-pill px-4 py-2 me-2 shadow-sm fw-semibold" style="font-size: 0.9rem;">Ciput</a>
 </div>
 
