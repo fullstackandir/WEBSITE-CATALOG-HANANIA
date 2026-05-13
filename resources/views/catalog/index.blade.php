@@ -39,6 +39,7 @@
     <a href="{{ route('catalog.index', ['search' => 'Bergo']) }}" class="btn {{ str_contains($currentSearch, 'bergo') ? 'btn-maroon border-0 text-white' : 'btn-white border text-muted' }} rounded-pill px-4 py-2 me-2 shadow-sm fw-semibold" style="font-size: 0.9rem;">Bergo</a>
     <a href="{{ route('catalog.index', ['search' => 'Ciput']) }}" class="btn {{ str_contains($currentSearch, 'ciput') ? 'btn-maroon border-0 text-white' : 'btn-white border text-muted' }} rounded-pill px-4 py-2 me-2 shadow-sm fw-semibold" style="font-size: 0.9rem;">Ciput</a>
     <a href="{{ route('catalog.index', ['search' => 'Viscose']) }}" class="btn {{ str_contains($currentSearch, 'bergo') ? 'btn-maroon border-0 text-white' : 'btn-white border text-muted' }} rounded-pill px-4 py-2 me-2 shadow-sm fw-semibold" style="font-size: 0.9rem;">Viscose</a>
+    <a href="{{ route('catalog.index', ['search' => 'Zhia']) }}" class="btn {{ str_contains($currentSearch, 'bergo') ? 'btn-maroon border-0 text-white' : 'btn-white border text-muted' }} rounded-pill px-4 py-2 me-2 shadow-sm fw-semibold" style="font-size: 0.9rem;">Zhia</a>
 </div>
 
 {{-- Section Title --}}
